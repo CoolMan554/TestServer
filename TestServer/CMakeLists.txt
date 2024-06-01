@@ -16,6 +16,8 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Network REQUIRED)
 
 add_executable(TestServer
   main.cpp
+  servermanager.cpp
+  servermanager.h
 )
 target_link_libraries(TestServer Qt${QT_VERSION_MAJOR}::Core)
 target_link_libraries(TestServer Qt${QT_VERSION_MAJOR}::Network)
