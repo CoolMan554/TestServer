@@ -41,7 +41,7 @@ ServerManager::~ServerManager()
 
 void ServerManager::SendMessageToClient(const QByteArray message)
 {
-    if(tcpSocket->state() == QAbstractSocket::ConnectingState)//Отправляем сообщение при активном соединении
+    if(tcpSocket->state() == QAbstractSocket::ConnectedState)//Отправляем сообщение при активном соединении
     {
         QByteArray data;
         data.clear();
