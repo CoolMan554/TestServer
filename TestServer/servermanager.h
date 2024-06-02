@@ -6,6 +6,8 @@
 #include <QTcpSocket>
 #include <QDebug>
 #include <QDataStream>
+#include <QThread>
+#include <QTimer>
 
 class ServerManager : public QTcpServer
 {
@@ -13,16 +15,19 @@ class ServerManager : public QTcpServer
 public:
     ServerManager(int port, QObject* parent = nullptr);
     ~ServerManager();
-    QTcpSocket *tcpSocket;
-private:
-    QVector<QTcpSocket*> vectorSockets;
-    QByteArray Data;
-    quint32 countReadMessage{0};///<Счетчик сообщений
-    void SendToClient(const QString message);
+private:        
+    QTcpSocket *tcpSocket{};
+    static quint32 countReadMessage;///<Счетчик сообщений
+    QVector<QTcpSocket*> vectorSockets;    
+    QThread *threadLog{};///<Поток для подсчета принятых сообщений
+    const int periodStatusLog{10};///<Период опроса принятых сообщений
+    QTimer *timerLog{};///<Таймер для подсчета принятых сообщений
+    void SendToClient(const QByteArray message);
 public slots:
     void slotReadyRead();
     void incomingConnection(qintptr socketDescriptor);
     void Disconnect();
+    void checkLogStatus();
 };
 
 #endif // SERVERMANAGER_H

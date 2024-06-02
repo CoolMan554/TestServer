@@ -1,10 +1,27 @@
 #include "servermanager.h"
 
+quint32 ServerManager::countReadMessage{0};
+
 ServerManager::ServerManager(int port, QObject *parent) : QTcpServer(parent)
 {
     if(this->listen(QHostAddress::Any, 7001))
     {
         qDebug() << "ServerManager listen QHostAddress::Any Port:" << port;
+        threadLog = new QThread();
+        threadLog->setObjectName("ServerManager#0");
+        moveToThread(threadLog);
+        timerLog = new QTimer(this);
+        timerLog->setSingleShot(false);
+        timerLog->setInterval(periodStatusLog * 1000);
+        timerLog->moveToThread(threadLog);
+        connect(timerLog, &QTimer::timeout, this, &ServerManager::checkLogStatus, Qt::ConnectionType::QueuedConnection);
+        connect(threadLog, &QThread::started, timerLog, static_cast<void(QTimer::*)()>(&QTimer::start));
+        connect(threadLog, &QThread::finished, [this]()
+        {
+            qDebug() << "ServerManager::ServerManager::threadLog delete";
+            threadLog->deleteLater();
+        });
+        threadLog->start();
     }
     else
         qDebug() << "ServerManager listen ERROR QHostAddress::Any Port:" << port;
@@ -14,10 +31,15 @@ ServerManager::~ServerManager()
 {
     for(auto socket : vectorSockets)
         socket->deleteLater();
-    delete tcpSocket;
+
+    if(timerLog)
+        timerLog->stop();
+
+    threadLog->quit();
+    threadLog->wait();
 }
 
-void ServerManager::SendToClient(const QString message)
+void ServerManager::SendToClient(const QByteArray message)
 {
     QByteArray data;
     data.clear();
@@ -34,10 +56,11 @@ void ServerManager::slotReadyRead()
 {
     tcpSocket = (QTcpSocket*)sender();
     QDataStream in(tcpSocket);
-    quint16 nextBlockSize = 0;
+    quint16 nextBlockSize{0};///<Размер блока сообщений
     in.setVersion(QDataStream::Qt_5_15);
-    quint16 id = 0;
-    QByteArray data;
+    QByteArray Data;
+    Data.clear();
+    quint32 id = 0;
     if(in.status() == QDataStream::Ok)
     {
         qDebug() << "ServerManager::slotReadyRead read";
@@ -51,14 +74,14 @@ void ServerManager::slotReadyRead()
             }
             if(tcpSocket->bytesAvailable() < nextBlockSize)
                 break;
-            in >> id;
-            in >> data;
-            nextBlockSize = 0;
+            in >> id >> Data;
+            QString responseMessage = QString("id: %1 Сервер: Сообщение получено").arg(id);
+            SendToClient(responseMessage.toUtf8());
+            countReadMessage++;
+            break;
         }
-        SendToClient(QString("id: %1 Сервер: Сообщение получено").arg(id));
     }
     else qDebug() << "ServerManager::slotReadyRead DataStream Error";
-    countReadMessage++;
 }
 
 void ServerManager::incomingConnection(qintptr socketDescriptor)
@@ -86,4 +109,9 @@ void ServerManager::Disconnect()
         vectorSockets.erase(sock);
         qDebug() << "ServerManager::Disconnect";
     }
+}
+
+void ServerManager::checkLogStatus()
+{
+    qDebug() << "ServerManager::checkLogStatus:: Количество принятых сообщений: " << countReadMessage;
 }

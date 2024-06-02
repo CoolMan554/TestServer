@@ -5,9 +5,9 @@
 int main(int argc, char *argv[])
 {
     setlocale(LC_ALL, "RU");
-    QCoreApplication a(argc, argv);
+    QCoreApplication app(argc, argv);
 
     std::shared_ptr<ServerManager> serverManager = std::make_shared<ServerManager>(7001);
 
-    return a.exec();
+    return app.exec();
 }
