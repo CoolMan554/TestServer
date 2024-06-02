@@ -78,6 +78,7 @@ void ServerManager::slotReadyRead()
             if(tcpSocket->bytesAvailable() < nextBlockSize)
                 break;
             in >> id >> Data;
+            qDebug() << QString("id: %1 Сервер: Сообщение получено - %2").arg(id).arg(QString::fromUtf8(Data));
             QString responseMessage = QString("id: %1 Сервер: Сообщение получено").arg(id);
             SendMessageToClient(responseMessage.toUtf8());
             countReadMessage++;
@@ -89,7 +90,7 @@ void ServerManager::slotReadyRead()
 
 void ServerManager::incomingConnection(qintptr socketDescriptor)
 {
-    tcpSocket = new QTcpSocket;
+    tcpSocket = new QTcpSocket();
     tcpSocket->setSocketDescriptor(socketDescriptor);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &ServerManager::slotReadyRead);
     connect(tcpSocket, &QTcpSocket::disconnected, this, &ServerManager::Disconnect);
