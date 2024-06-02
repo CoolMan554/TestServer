@@ -39,17 +39,20 @@ ServerManager::~ServerManager()
     threadLog->wait();
 }
 
-void ServerManager::SendToClient(const QByteArray message)
+void ServerManager::SendMessageToClient(const QByteArray message)
 {
-    QByteArray data;
-    data.clear();
-    QDataStream out(&data, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-    out << quint16(0) << message;
-    out.device()->seek(0);
-    out << quint16(data.size() - sizeof(quint16));
-    tcpSocket->write(data);
-    tcpSocket->flush();
+    if(tcpSocket->state() == QAbstractSocket::ConnectingState)//Отправляем сообщение при активном соединении
+    {
+        QByteArray data;
+        data.clear();
+        QDataStream out(&data, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_5_15);
+        out << quint16(0) << message;
+        out.device()->seek(0);
+        out << quint16(data.size() - sizeof(quint16));
+        tcpSocket->write(data);
+        tcpSocket->flush();
+    }
 }
 
 void ServerManager::slotReadyRead()
@@ -76,7 +79,7 @@ void ServerManager::slotReadyRead()
                 break;
             in >> id >> Data;
             QString responseMessage = QString("id: %1 Сервер: Сообщение получено").arg(id);
-            SendToClient(responseMessage.toUtf8());
+            SendMessageToClient(responseMessage.toUtf8());
             countReadMessage++;
             break;
         }

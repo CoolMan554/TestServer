@@ -22,7 +22,7 @@ private:
     QThread *threadLog{};///<Поток для подсчета принятых сообщений
     const int periodStatusLog{10};///<Период опроса принятых сообщений
     QTimer *timerLog{};///<Таймер для подсчета принятых сообщений
-    void SendToClient(const QByteArray message);
+    void SendMessageToClient(const QByteArray message);
 public slots:
     void slotReadyRead();
     void incomingConnection(qintptr socketDescriptor);
