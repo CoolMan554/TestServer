@@ -62,11 +62,17 @@ void ServerManager::slotReadyRead()
             if(nextBlockSize == 0)
             {
                 if(tcpSocket->bytesAvailable() < 2)
+                {
+                    qDebug() << "ServerManager::slotReadyRead Error -> tcpSocket->bytesAvailable() < 2";
                     break;
+                }
                 in >> nextBlockSize;
             }
             if(tcpSocket->bytesAvailable() < nextBlockSize)
+            {
+                qDebug() << "ServerManager::slotReadyRead Error -> tcpSocket->bytesAvailable() < nextBlockSize";
                 break;
+            }
             in >> id >> Data;
             qDebug() << QString("id: %1 Сервер: Сообщение получено - %2").arg(id).arg(QString::fromUtf8(Data));
             QString responseMessage = QString("id: %1 Сервер: Сообщение получено").arg(id);
