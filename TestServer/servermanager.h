@@ -18,8 +18,7 @@ public:
 private:        
     QTcpSocket *tcpSocket{};
     static quint32 countReadMessage;///<Счетчик сообщений
-    QVector<QTcpSocket*> vectorSockets;    
-    QThread *threadLog{};///<Поток для подсчета принятых сообщений
+    QVector<QTcpSocket*> vectorSockets;        
     const int periodStatusLog{10};///<Период опроса принятых сообщений
     QTimer *timerLog{};///<Таймер для подсчета принятых сообщений
     void SendMessageToClient(const QByteArray message);

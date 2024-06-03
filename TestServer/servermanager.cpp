@@ -4,24 +4,14 @@ quint32 ServerManager::countReadMessage{0};
 
 ServerManager::ServerManager(int port, QObject *parent) : QTcpServer(parent)
 {
-    if(this->listen(QHostAddress::Any, 7001))
+    if(this->listen(QHostAddress::Any, port))
     {
-        qDebug() << "ServerManager listen QHostAddress::Any Port:" << port;
-        threadLog = new QThread();
-        threadLog->setObjectName("ServerManager#0");
-        moveToThread(threadLog);
-        timerLog = new QTimer(this);
+        qDebug() << "ServerManager listen QHostAddress::Any Port:" << port;                     
+        timerLog = new QTimer();
         timerLog->setSingleShot(false);
-        timerLog->setInterval(periodStatusLog * 1000);
-        timerLog->moveToThread(threadLog);
-        connect(timerLog, &QTimer::timeout, this, &ServerManager::checkLogStatus, Qt::ConnectionType::QueuedConnection);
-        connect(threadLog, &QThread::started, timerLog, static_cast<void(QTimer::*)()>(&QTimer::start));
-        connect(threadLog, &QThread::finished, [this]()
-        {
-            qDebug() << "ServerManager::ServerManager::threadLog delete";
-            threadLog->deleteLater();
-        });
-        threadLog->start();
+        timerLog->setInterval(periodStatusLog * 1000);        
+        connect(timerLog, &QTimer::timeout, this, &ServerManager::checkLogStatus);
+        timerLog->start();
     }
     else
         qDebug() << "ServerManager listen ERROR QHostAddress::Any Port:" << port;
@@ -33,10 +23,10 @@ ServerManager::~ServerManager()
         socket->deleteLater();
 
     if(timerLog)
+    {
         timerLog->stop();
-
-    threadLog->quit();
-    threadLog->wait();
+        delete timerLog;
+    }
 }
 
 void ServerManager::SendMessageToClient(const QByteArray message)
